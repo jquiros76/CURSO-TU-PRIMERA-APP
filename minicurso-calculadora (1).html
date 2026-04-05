@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mini Curso · Calculadora de Precios</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --azul:      #1B4FD8;
+  --azul-lt:   #EEF3FD;
+  --azul-md:   #3B6FEB;
+  --verde:     #0E9E6E;
+  --verde-lt:  #E6F7F2;
+  --verde-dk:  #097A55;
+  --blanco:    #FFFFFF;
+  --gris-bg:   #F4F6FB;
+  --gris-txt:  #5A6380;
+  --oscuro:    #111827;
+  --borde:     #D9E2F5;
+  --code-bg:   #0F1B35;
+  --amarillo:  #F59E0B;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--gris-bg);
+  color: var(--oscuro);
+  min-height: 100vh;
+}
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(135deg, var(--azul) 0%, #1040B8 50%, #0A2D7A 100%);
+  padding: 48px 24px 56px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  top: -100px; right: -80px;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  width: 250px; height: 250px;
+  border-radius: 50%;
+  background: rgba(14,158,110,0.15);
+  bottom: -60px; left: -40px;
+}
+.hero-badge {
+  display: inline-block;
+  background: rgba(14,158,110,0.25);
+  color: #6EE7C4;
+  border: 1px solid rgba(110,231,196,0.3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+.hero h1 {
+  font-size: clamp(24px,5vw,36px);
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 10px;
+}
+.hero h1 em {
+  font-style: normal;
+  color: #6EE7C4;
+}
+.hero p {
+  font-size: 15px;
+  color: rgba(255,255,255,0.7);
+  max-width: 420px;
+  margin: 0 auto 24px;
+  line-height: 1.6;
+}
+
+/* ── PROGRESS BAR ── */
+.progress-wrap {
+  background: rgba(255,255,255,0.1);
+  border-radius: 20px;
+  height: 6px;
+  max-width: 320px;
+  margin: 0 auto 8px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #6EE7C4, var(--verde));
+  border-radius: 20px;
+  transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  width: 0%;
+}
+.progress-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+}
+
+/* ── NAV ZONAS ── */
+.nav-zonas {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 20px 16px;
+  flex-wrap: wrap;
+  background: var(--blanco);
+  border-bottom: 1px solid var(--borde);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(27,79,216,0.06);
+}
+.nav-btn {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 2px solid var(--borde);
+  background: transparent;
+  color: var(--gris-txt);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.nav-btn:hover { border-color: var(--azul); color: var(--azul); }
+.nav-btn.activo { background: var(--azul); border-color: var(--azul); color: #fff; }
+.nav-btn.completado { border-color: var(--verde); color: var(--verde); }
+.nav-btn.completado::before { content: '✓ '; }
+
+/* ── CONTENEDOR PRINCIPAL ── */
+.main { max-width: 680px; margin: 0 auto; padding: 32px 16px 64px; }
+
+/* ── ZONA / SECCIÓN ── */
+.zona {
+  display: none;
+  animation: fadeUp 0.35s ease forwards;
+}
+.zona.activa { display: block; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── CARD DE ZONA ── */
+.zona-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.zona-num {
+  flex-shrink: 0;
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: var(--azul);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.zona-titulo { font-size: 22px; font-weight: 800; color: var(--oscuro); line-height: 1.2; }
+.zona-sub    { font-size: 14px; color: var(--gris-txt); margin-top: 3px; }
+
+/* ── BLOQUE DE TEXTO ── */
+.bloque {
+  background: var(--blanco);
+  border-radius: 14px;
+  border: 1px solid var(--borde);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.bloque h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--azul);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+.bloque p { font-size: 14px; line-height: 1.7; color: #374151; }
+.bloque p + p { margin-top: 8px; }
+
+/* ── INFO BOX ── */
+.info-box {
+  display: flex;
+  gap: 12px;
+  background: var(--azul-lt);
+  border-left: 3px solid var(--azul);
+  border-radius: 0 10px 10px 0;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #1e3a8a;
+  line-height: 1.6;
+}
+.info-box .icon { font-size: 18px; flex-shrink:0; }
+
+.tip-box {
+  display: flex;
+  gap: 12px;
+  background: var(--verde-lt);
+  border-left: 3px solid var(--verde);
+  border-radius: 0 10px 10px 0;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #064E3B;
+  line-height: 1.6;
+}
+
+.warn-box {
+  display: flex;
+  gap: 12px;
+  background: #FFFBEB;
+  border-left: 3px solid var(--amarillo);
+  border-radius: 0 10px 10px 0;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #78350F;
+  line-height: 1.6;
+}
+
+/* ── CODE BLOCK ── */
+.code-wrap {
+  background: var(--code-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.code-lang {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.code-copy {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  background: rgba(255,255,255,0.07);
+  border: none;
+  border-radius: 6px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.code-copy:hover { color:#fff; background: rgba(255,255,255,0.14); }
+.code-copy.copiado { color: #6EE7C4; }
+
+pre {
+  padding: 16px;
+  overflow-x: auto;
+  font-family: 'Fira Code', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #C9D6F5;
+}
+.kw  { color: #7DD3FC; }  /* keyword azul */
+.fn  { color: #86EFAC; }  /* función verde */
+.str { color: #FCA5A5; }  /* string rojo suave */
+.cm  { color: #6B7DAA; font-style:italic; }  /* comentario */
+.nm  { color: #FCD34D; }  /* número amarillo */
+.tg  { color: #7DD3FC; }  /* html tag */
+.at  { color: #86EFAC; }  /* atributo */
+.vl  { color: #FCA5A5; }  /* valor */
+
+/* ── TABLA DE ZONAS ── */
+.tabla-zonas {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.tabla-zonas th {
+  background: var(--azul);
+  color: #fff;
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 700;
+}
+.tabla-zonas th:first-child { border-radius: 10px 0 0 0; }
+.tabla-zonas th:last-child  { border-radius: 0 10px 0 0; }
+.tabla-zonas td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--borde);
+  color: #374151;
+  vertical-align: top;
+}
+.tabla-zonas tr:last-child td { border-bottom: none; }
+.tabla-zonas tr:nth-child(even) td { background: var(--gris-bg); }
+.tabla-zonas tr:last-child td:first-child { border-radius: 0 0 0 10px; }
+.tabla-zonas tr:last-child td:last-child  { border-radius: 0 0 10px 0; }
+.tabla-zonas .wrap { background: var(--blanco); border: 1px solid var(--borde); border-radius: 10px; overflow: hidden; }
+
+/* ── QUIZ INTERACTIVO ── */
+.quiz-card {
+  background: var(--blanco);
+  border: 2px solid var(--borde);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.quiz-pregunta {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--oscuro);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.quiz-opciones { display: flex; flex-direction: column; gap: 8px; }
+.quiz-opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 2px solid var(--borde);
+  background: var(--gris-bg);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  transition: all 0.18s;
+  text-align: left;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.quiz-opcion:hover:not(:disabled) { border-color: var(--azul-md); background: var(--azul-lt); color: var(--azul); }
+.quiz-opcion.correcta  { border-color: var(--verde); background: var(--verde-lt); color: var(--verde-dk); }
+.quiz-opcion.incorrecta { border-color: #EF4444; background: #FEF2F2; color: #991B1B; }
+.quiz-opcion:disabled { cursor: default; }
+.quiz-feedback {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 8px;
+  display: none;
+}
+.quiz-feedback.ok  { background: var(--verde-lt); color: var(--verde-dk); display:block; }
+.quiz-feedback.err { background: #FEF2F2; color: #991B1B; display:block; }
+
+/* ── PRÁCTICA INTERACTIVA ── */
+.practica {
+  background: var(--blanco);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.practica h3 { font-size: 15px; font-weight: 700; color: var(--oscuro); margin-bottom: 12px; }
+.practica label { font-size: 12px; font-weight: 700; color: var(--gris-txt); text-transform: uppercase; letter-spacing: 0.06em; display:block; margin-bottom:5px; }
+.practica input[type=color] {
+  width: 48px; height: 34px;
+  border: 2px solid var(--borde);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 2px;
+  background: var(--gris-bg);
+}
+.practica input[type=text] {
+  width: 100%;
+  padding: 10px 13px;
+  border: 2px solid var(--borde);
+  border-radius: 9px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  color: var(--oscuro);
+  outline: none;
+  transition: border-color 0.2s;
+  background: var(--gris-bg);
+}
+.practica input[type=text]:focus { border-color: var(--azul); background: #fff; }
+.color-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+.color-item { display:flex; flex-direction:column; gap:5px; align-items:center; font-size:11px; color:var(--gris-txt); font-weight:600; }
+.preview-card {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  margin-top: 12px;
+}
+.preview-header {
+  padding: 14px 16px;
+  font-weight: 800;
+  font-size: 15px;
+  color: #fff;
+  transition: background 0.3s;
+}
+.preview-body {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: #374151;
+  background: var(--gris-bg);
+}
+.preview-btn {
+  display: inline-block;
+  padding: 8px 18px;
+  border-radius: 8px;
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 13px;
+  margin-top: 10px;
+  transition: background 0.3s;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* ── BOTONES NAVEGACIÓN ── */
+.nav-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 28px;
+  align-items: center;
+}
+.btn-prev, .btn-next {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-prev { background: var(--gris-bg); color: var(--gris-txt); border: 2px solid var(--borde); }
+.btn-prev:hover { background: var(--azul-lt); color: var(--azul); border-color: var(--azul); }
+.btn-next { background: var(--azul); color: #fff; }
+.btn-next:hover { background: var(--azul-md); box-shadow: 0 4px 14px rgba(27,79,216,0.3); transform: translateY(-1px); }
+.btn-next:disabled { background: #CBD5E1; cursor: default; transform: none; box-shadow: none; }
+.btn-finalizar { background: var(--verde); color: #fff; }
+.btn-finalizar:hover { background: var(--verde-dk); box-shadow: 0 4px 14px rgba(14,158,110,0.3); transform: translateY(-1px); }
+
+/* ── PANTALLA FINAL ── */
+.final-screen {
+  text-align: center;
+  padding: 40px 16px;
+}
+.final-screen .trofeo { font-size: 64px; margin-bottom: 16px; }
+.final-screen h2 { font-size: 28px; font-weight: 800; color: var(--verde-dk); margin-bottom: 10px; }
+.final-screen p  { font-size: 15px; color: var(--gris-txt); line-height: 1.6; max-width: 380px; margin: 0 auto 24px; }
+.checklist { list-style:none; text-align:left; max-width:340px; margin:0 auto 28px; }
+.checklist li {
+  display: flex; gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+  font-size: 14px;
+  color: #374151;
+}
+.checklist li:last-child { border-bottom: none; }
+.checklist .chk { color: var(--verde); font-size: 16px; flex-shrink:0; }
+.btn-reiniciar {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 13px 28px;
+  background: var(--azul);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-reiniciar:hover { background: var(--azul-md); transform: translateY(-1px); }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">Mini Curso Interactivo</div>
+  <h1>Entiende tu <em>Calculadora</em><br>de Precios</h1>
+  <p>Aprende zona por zona qué puedes modificar y cómo funciona el código.</p>
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progreso"></div>
+  </div>
+  <div class="progress-label" id="prog-label">Zona 0 de 4</div>
+</div>
+
+<!-- NAV -->
+<nav class="nav-zonas" id="nav">
+  <button class="nav-btn activo" onclick="irA(0)">Intro</button>
+  <button class="nav-btn" onclick="irA(1)">Zona 1 · Textos</button>
+  <button class="nav-btn" onclick="irA(2)">Zona 2 · Colores</button>
+  <button class="nav-btn" onclick="irA(3)">Zona 3 · Fórmula</button>
+  <button class="nav-btn" onclick="irA(4)">Zona 4 · No tocar</button>
+</nav>
+
+<main class="main">
+
+  <!-- ══════════════════════════════════════
+       ZONA 0 — INTRO
+  ══════════════════════════════════════ -->
+  <section class="zona activa" id="zona-0">
+    <div class="zona-header">
+      <div class="zona-num" style="background:var(--verde)">👋</div>
+      <div>
+        <div class="zona-titulo">Bienvenido al curso</div>
+        <div class="zona-sub">Aprenderás a modificar la calculadora con confianza</div>
+      </div>
+    </div>
+
+    <div class="bloque">
+      <h3>¿Qué vas a aprender?</h3>
+      <p>La calculadora de precios es un archivo HTML con 3 partes: el <strong>diseño (CSS)</strong>, la <strong>estructura (HTML)</strong> y la <strong>lógica (JavaScript)</strong>. Este mini curso te explica, zona por zona, qué puedes tocar sin romper nada.</p>
+    </div>
+
+    <div class="info-box">
+      <span class="icon">📁</span>
+      <div>El archivo completo se llama <strong>calculadora-precios.html</strong>. Todo el código está en ese único archivo.</div>
+    </div>
+
+    <div class="bloque">
+      <h3>Las 3 zonas de un archivo HTML</h3>
+      <table class="tabla-zonas" style="margin-top:4px">
+        <thead>
+          <tr><th>Parte</th><th>¿Qué hace?</th><th>¿Se puede tocar?</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>&lt;head&gt;</code> CSS</td><td>Colores, fuentes, tamaños</td><td>✅ Sí, con cuidado</td></tr>
+          <tr><td><code>&lt;body&gt;</code> HTML</td><td>Textos, botones, labels</td><td>✅ Sí, libremente</td></tr>
+          <tr><td><code>&lt;script&gt;</code> JS</td><td>Cálculos y validaciones</td><td>⚠️ Solo la fórmula</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tip-box">
+      <span>🎯</span>
+      <div><strong>Tip:</strong> Cada zona de este curso tiene una pequeña pregunta para verificar que entendiste. ¡Son fáciles!</div>
+    </div>
+
+    <div class="nav-footer">
+      <span></span>
+      <button class="btn-next" onclick="irA(1)">Zona 1: Textos →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       ZONA 1 — TEXTOS
+  ══════════════════════════════════════ -->
+  <section class="zona" id="zona-1">
+    <div class="zona-header">
+      <div class="zona-num">1</div>
+      <div>
+        <div class="zona-titulo">Textos visibles</div>
+        <div class="zona-sub">Lo más fácil y seguro de cambiar</div>
+      </div>
+    </div>
+
+    <div class="bloque">
+      <h3>¿Dónde están los textos?</h3>
+      <p>Todos los textos que el usuario ve están en el <strong>HTML</strong>, dentro de etiquetas como <code>&lt;h1&gt;</code>, <code>&lt;p&gt;</code>, <code>&lt;label&gt;</code>, etc. Puedes cambiarlos sin tocar CSS ni JavaScript.</p>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">html — textos que puedes cambiar</span>
+        <button class="code-copy" onclick="copiar(this, 'c1')">Copiar</button>
+      </div>
+      <pre id="c1"><span class="cm">&lt;!-- Etiqueta verde pequeña arriba del título --&gt;</span>
+<span class="tg">&lt;span</span> <span class="at">class=</span><span class="vl">"badge"</span><span class="tg">&gt;</span>Herramienta gratuita<span class="tg">&lt;/span&gt;</span>
+
+<span class="cm">&lt;!-- Título principal --&gt;</span>
+<span class="tg">&lt;h1&gt;</span>Calcula tu <span class="tg">&lt;span&gt;</span>precio<span class="tg">&lt;/span&gt;</span> ideal<span class="tg">&lt;/h1&gt;</span>
+
+<span class="cm">&lt;!-- Descripción corta --&gt;</span>
+<span class="tg">&lt;p</span> <span class="at">class=</span><span class="vl">"subtitle"</span><span class="tg">&gt;</span>Ingresa el costo y tu margen...<span class="tg">&lt;/p&gt;</span>
+
+<span class="cm">&lt;!-- Etiquetas de los campos --&gt;</span>
+<span class="tg">&lt;label</span> <span class="at">for=</span><span class="vl">"costo"</span><span class="tg">&gt;</span>Costo del producto<span class="tg">&lt;/label&gt;</span>
+<span class="tg">&lt;label</span> <span class="at">for=</span><span class="vl">"margen"</span><span class="tg">&gt;</span>Porcentaje de ganancia<span class="tg">&lt;/label&gt;</span>
+
+<span class="cm">&lt;!-- Texto del botón --&gt;</span>
+<span class="tg">&lt;button&gt;</span>Calcular precio →<span class="tg">&lt;/button&gt;</span></pre>
+    </div>
+
+    <div class="info-box">
+      <span class="icon">💡</span>
+      <div>El texto entre las etiquetas de apertura y cierre (<code>&lt;h1&gt;</code>texto<code>&lt;/h1&gt;</code>) es lo que aparece en pantalla. Cámbialo por el que quieras.</div>
+    </div>
+
+    <div class="bloque">
+      <h3>Símbolo de moneda</h3>
+      <p>El símbolo <strong>$</strong> aparece en 3 lugares. En el HTML (dentro del input) y en el JavaScript (en los resultados).</p>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">html + js — cambiar símbolo de moneda</span>
+        <button class="code-copy" onclick="copiar(this, 'c2')">Copiar</button>
+      </div>
+      <pre id="c2"><span class="cm">&lt;!-- En el HTML (input del costo) --&gt;</span>
+<span class="tg">&lt;span</span> <span class="at">class=</span><span class="vl">"input-prefix"</span><span class="tg">&gt;</span>$<span class="tg">&lt;/span&gt;</span>  <span class="cm">&lt;!-- cambia $ por ₡, €, Q... --&gt;</span>
+
+<span class="cm">// En el JavaScript (resultados)</span>
+<span class="kw">document</span>.<span class="fn">getElementById</span>(<span class="str">'precio-venta'</span>).<span class="kw">textContent</span> = <span class="str">'$'</span> + precioVenta;
+<span class="kw">document</span>.<span class="fn">getElementById</span>(<span class="str">'ganancia'</span>).<span class="kw">textContent</span>     = <span class="str">'$'</span> + ganancia;
+<span class="cm">// Cambia '$' por '₡' en las dos líneas de arriba</span></pre>
+    </div>
+
+    <div class="tip-box">
+      <span>✏️</span>
+      <div>Usa <strong>Ctrl+F</strong> en tu editor para buscar <code>$</code> y encontrar todos los lugares rápido.</div>
+    </div>
+
+    <!-- QUIZ 1 -->
+    <div class="quiz-card" id="quiz1">
+      <div class="quiz-pregunta">❓ ¿En qué parte del archivo están los textos visibles de la app?</div>
+      <div class="quiz-opciones">
+        <button class="quiz-opcion" onclick="responder('quiz1', this, false)">En el bloque &lt;style&gt; del CSS</button>
+        <button class="quiz-opcion" onclick="responder('quiz1', this, true)">En el bloque &lt;body&gt; del HTML</button>
+        <button class="quiz-opcion" onclick="responder('quiz1', this, false)">En el bloque &lt;script&gt; de JavaScript</button>
+      </div>
+      <div class="quiz-feedback" id="fb-quiz1"></div>
+    </div>
+
+    <div class="nav-footer">
+      <button class="btn-prev" onclick="irA(0)">← Intro</button>
+      <button class="btn-next" onclick="irA(2)">Zona 2: Colores →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       ZONA 2 — COLORES
+  ══════════════════════════════════════ -->
+  <section class="zona" id="zona-2">
+    <div class="zona-header">
+      <div class="zona-num">2</div>
+      <div>
+        <div class="zona-titulo">Colores y variables CSS</div>
+        <div class="zona-sub">El "panel de control" del diseño</div>
+      </div>
+    </div>
+
+    <div class="bloque">
+      <h3>¿Qué son las variables CSS?</h3>
+      <p>En lugar de escribir el mismo color 20 veces, lo defines <strong>una sola vez</strong> con un nombre, y lo reutilizas en todo el archivo. Si cambias el nombre, cambia en todos lados.</p>
+      <p>El bloque <code>:root { }</code> al inicio del CSS es donde están todas las variables.</p>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">css — variables de color (bloque :root)</span>
+        <button class="code-copy" onclick="copiar(this, 'c3')">Copiar</button>
+      </div>
+      <pre id="c3"><span class="fn">:root</span> {
+  <span class="cm">/* Fondo y tarjeta */</span>
+  <span class="kw">--bg</span>:       <span class="str">#F0EDE8</span>;   <span class="cm">/* fondo beige de la página */</span>
+  <span class="kw">--card</span>:     <span class="str">#FFFFFF</span>;   <span class="cm">/* fondo blanco de la tarjeta */</span>
+
+  <span class="cm">/* Colores principales */</span>
+  <span class="kw">--accent</span>:   <span class="str">#1A1A2E</span>;   <span class="cm">/* azul oscuro — botón y tarjeta resultado */</span>
+  <span class="kw">--green</span>:    <span class="str">#2D6A4F</span>;   <span class="cm">/* verde — texto de ganancia */</span>
+  <span class="kw">--green-lt</span>: <span class="str">#D8F3DC</span>;   <span class="cm">/* verde claro — fondo de ganancia */</span>
+
+  <span class="cm">/* Secundarios */</span>
+  <span class="kw">--muted</span>:    <span class="str">#8A8A99</span>;   <span class="cm">/* gris — textos secundarios */</span>
+  <span class="kw">--border</span>:   <span class="str">#E4E0D8</span>;   <span class="cm">/* color de bordes */</span>
+  <span class="kw">--error</span>:    <span class="str">#C0392B</span>;   <span class="cm">/* rojo — mensajes de error */</span>
+}</pre>
+    </div>
+
+    <div class="info-box">
+      <span class="icon">🎨</span>
+      <div>Solo cambia los códigos hex <code>#XXXXXX</code>. Deja los nombres (<code>--accent</code>, <code>--green</code>…) exactamente igual — esos nombres los usa el resto del CSS.</div>
+    </div>
+
+    <!-- PRÁCTICA INTERACTIVA -->
+    <div class="practica">
+      <h3>🧪 Práctica: Personaliza los colores</h3>
+      <p style="font-size:13px;color:var(--gris-txt);margin-bottom:14px">Cambia los colores y observa cómo se actualiza la vista previa en tiempo real.</p>
+
+      <div class="color-row">
+        <div class="color-item">
+          <input type="color" id="pick-accent" value="#1A1A2E" oninput="actualizarPreview()"/>
+          <span>--accent</span>
+        </div>
+        <div class="color-item">
+          <input type="color" id="pick-green" value="#2D6A4F" oninput="actualizarPreview()"/>
+          <span>--green</span>
+        </div>
+        <div class="color-item">
+          <input type="color" id="pick-bg" value="#F0EDE8" oninput="actualizarPreview()"/>
+          <span>--bg</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <label>Texto del badge (etiqueta)</label>
+        <input type="text" id="pick-badge" value="Herramienta gratuita" oninput="actualizarPreview()"/>
+      </div>
+
+      <div class="preview-card">
+        <div class="preview-header" id="prev-header">Calcula tu <strong>precio</strong> ideal</div>
+        <div class="preview-body">
+          <div id="prev-badge" style="display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:8px;background:rgba(0,0,0,0.07)">Herramienta gratuita</div>
+          <br>
+          <button class="preview-btn" id="prev-btn">Calcular precio →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="warn-box">
+      <span>⚠️</span>
+      <div><strong>No cambies los nombres</strong> de las variables, solo los valores hex. Si renombras <code>--accent</code> a <code>--azul</code>, todo lo que usaba <code>--accent</code> dejará de funcionar.</div>
+    </div>
+
+    <!-- QUIZ 2 -->
+    <div class="quiz-card" id="quiz2">
+      <div class="quiz-pregunta">❓ Si quieres cambiar el color del botón de la calculadora, ¿qué variable debes editar?</div>
+      <div class="quiz-opciones">
+        <button class="quiz-opcion" onclick="responder('quiz2', this, false)">--border</button>
+        <button class="quiz-opcion" onclick="responder('quiz2', this, false)">--muted</button>
+        <button class="quiz-opcion" onclick="responder('quiz2', this, true)">--accent</button>
+      </div>
+      <div class="quiz-feedback" id="fb-quiz2"></div>
+    </div>
+
+    <div class="nav-footer">
+      <button class="btn-prev" onclick="irA(1)">← Zona 1</button>
+      <button class="btn-next" onclick="irA(3)">Zona 3: Fórmula →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       ZONA 3 — FÓRMULA
+  ══════════════════════════════════════ -->
+  <section class="zona" id="zona-3">
+    <div class="zona-header">
+      <div class="zona-num">3</div>
+      <div>
+        <div class="zona-titulo">La fórmula del cálculo</div>
+        <div class="zona-sub">El cerebro de la calculadora — modificable con cuidado</div>
+      </div>
+    </div>
+
+    <div class="bloque">
+      <h3>¿Cómo funciona la fórmula?</h3>
+      <p>Está en el JavaScript, dentro de la función <code>calcular()</code>. Son solo dos líneas matemáticas:</p>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">javascript — la fórmula</span>
+        <button class="code-copy" onclick="copiar(this, 'c4')">Copiar</button>
+      </div>
+      <pre id="c4"><span class="cm">// Paso 1: leer lo que el usuario escribió</span>
+<span class="kw">const</span> costo  = <span class="fn">parseFloat</span>(<span class="kw">costoStr</span>);   <span class="cm">// convierte texto → número</span>
+<span class="kw">const</span> margen = <span class="fn">parseFloat</span>(<span class="kw">margenStr</span>);  <span class="cm">// ej: "30" → 30</span>
+
+<span class="cm">// Paso 2: calcular</span>
+<span class="kw">const</span> ganancia    = costo * (margen / <span class="nm">100</span>);  <span class="cm">// 100 * 0.30 = 30</span>
+<span class="kw">const</span> precioVenta = costo + ganancia;         <span class="cm">// 100 + 30 = 130</span></pre>
+    </div>
+
+    <div class="bloque">
+      <h3>Calculadora visual</h3>
+      <p style="margin-bottom:10px">Prueba tú mismo la fórmula:</p>
+
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--gris-txt);display:block;margin-bottom:4px">COSTO $</label>
+          <input type="number" id="sim-costo" value="100" min="0" style="width:110px;padding:9px 12px;border:2px solid var(--borde);border-radius:9px;font-family:'Fira Code',monospace;font-size:16px;outline:none;font-weight:500" oninput="simular()"/>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--gris-txt);display:block;margin-bottom:4px">MARGEN %</label>
+          <input type="number" id="sim-margen" value="30" min="0" style="width:100px;padding:9px 12px;border:2px solid var(--borde);border-radius:9px;font-family:'Fira Code',monospace;font-size:16px;outline:none;font-weight:500" oninput="simular()"/>
+        </div>
+        <div style="padding-bottom:2px;font-size:22px;color:var(--gris-txt)">→</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--gris-txt);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">PRECIO VENTA</div>
+          <div id="sim-resultado" style="font-family:'Fira Code',monospace;font-size:24px;font-weight:700;color:var(--azul)">$130.00</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--verde);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">GANANCIA</div>
+          <div id="sim-ganancia" style="font-family:'Fira Code',monospace;font-size:24px;font-weight:700;color:var(--verde)">$30.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloque">
+      <h3>¿Quieres agregar un costo de envío?</h3>
+      <p>Ejemplo: suma un gasto fijo de $500 al precio de venta.</p>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">javascript — ejemplo con envío fijo</span>
+        <button class="code-copy" onclick="copiar(this, 'c5')">Copiar</button>
+      </div>
+      <pre id="c5"><span class="kw">const</span> envio       = <span class="nm">500</span>;                      <span class="cm">// ← agrega esta línea</span>
+<span class="kw">const</span> ganancia    = costo * (margen / <span class="nm">100</span>);
+<span class="kw">const</span> precioVenta = costo + ganancia + envio;  <span class="cm">// ← suma el envío</span></pre>
+    </div>
+
+    <div class="tip-box">
+      <span>🔁</span>
+      <div><strong>Regla de oro:</strong> No cambies los nombres de las variables (<code>costo</code>, <code>margen</code>, <code>ganancia</code>, <code>precioVenta</code>). Si los renombras, cámbialos en <em>todos</em> los lugares donde aparecen.</div>
+    </div>
+
+    <!-- QUIZ 3 -->
+    <div class="quiz-card" id="quiz3">
+      <div class="quiz-pregunta">❓ Con costo = $200 y margen = 50%, ¿cuál es el precio de venta?</div>
+      <div class="quiz-opciones">
+        <button class="quiz-opcion" onclick="responder('quiz3', this, false)">$250</button>
+        <button class="quiz-opcion" onclick="responder('quiz3', this, true)">$300</button>
+        <button class="quiz-opcion" onclick="responder('quiz3', this, false)">$350</button>
+      </div>
+      <div class="quiz-feedback" id="fb-quiz3"></div>
+    </div>
+
+    <div class="nav-footer">
+      <button class="btn-prev" onclick="irA(2)">← Zona 2</button>
+      <button class="btn-next" onclick="irA(4)">Zona 4: No tocar →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       ZONA 4 — NO TOCAR
+  ══════════════════════════════════════ -->
+  <section class="zona" id="zona-4">
+    <div class="zona-header">
+      <div class="zona-num" style="background:#EF4444">4</div>
+      <div>
+        <div class="zona-titulo">Zona de no tocar</div>
+        <div class="zona-sub">Estas partes conectan todo — si las rompes, nada funciona</div>
+      </div>
+    </div>
+
+    <div class="bloque">
+      <h3>¿Por qué no tocar esto?</h3>
+      <p>Estas líneas son los "cables" que conectan el HTML con el JavaScript. Si los cambias sin entenderlos, la calculadora dejará de responder al usuario.</p>
+    </div>
+
+    <table class="tabla-zonas" style="margin-bottom:16px">
+      <thead>
+        <tr><th>Código</th><th>¿Qué hace?</th><th>¿Qué pasa si lo quito?</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>id="costo"</code></td>
+          <td>Nombre único del input</td>
+          <td>JS no encuentra el campo</td>
+        </tr>
+        <tr>
+          <td><code>id="margen"</code></td>
+          <td>Nombre único del input</td>
+          <td>JS no lee el porcentaje</td>
+        </tr>
+        <tr>
+          <td><code>id="resultados"</code></td>
+          <td>Nombre de la sección resultado</td>
+          <td>Resultado no aparece</td>
+        </tr>
+        <tr>
+          <td><code>onclick="calcular()"</code></td>
+          <td>Conecta el botón con la función</td>
+          <td>El botón no hace nada</td>
+        </tr>
+        <tr>
+          <td><code>display: none</code></td>
+          <td>Oculta los resultados al inicio</td>
+          <td>Resultados vacíos visibles</td>
+        </tr>
+        <tr>
+          <td><code>parseFloat()</code></td>
+          <td>Convierte texto a número</td>
+          <td>Sumas incorrectas (ej: 1+1=11)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">html — partes críticas (no modificar)</span>
+        <button class="code-copy" onclick="copiar(this, 'c6')">Copiar</button>
+      </div>
+      <pre id="c6"><span class="cm">&lt;!-- ❌ NO cambies los id= de los inputs --&gt;</span>
+<span class="tg">&lt;input</span> <span class="at">type=</span><span class="vl">"number"</span> <span class="at">id=</span><span class="vl">"costo"</span> ...<span class="tg">/&gt;</span>   <span class="cm">&lt;!-- id fijo --&gt;</span>
+<span class="tg">&lt;input</span> <span class="at">type=</span><span class="vl">"number"</span> <span class="at">id=</span><span class="vl">"margen"</span> ...<span class="tg">/&gt;</span>  <span class="cm">&lt;!-- id fijo --&gt;</span>
+
+<span class="cm">&lt;!-- ❌ NO quites el onclick del botón --&gt;</span>
+<span class="tg">&lt;button</span> <span class="at">onclick=</span><span class="vl">"calcular()"</span><span class="tg">&gt;</span>Calcular<span class="tg">&lt;/button&gt;</span>
+
+<span class="cm">&lt;!-- ❌ NO toques el id ni el display:none de resultados --&gt;</span>
+<span class="tg">&lt;div</span> <span class="at">class=</span><span class="vl">"results"</span> <span class="at">id=</span><span class="vl">"resultados"</span><span class="tg">&gt;</span>...<span class="tg">&lt;/div&gt;</span></pre>
+    </div>
+
+    <div class="warn-box">
+      <span>⚠️</span>
+      <div><strong>Regla:</strong> Si cambias un <code>id=</code> en el HTML, debes cambiar exactamente el mismo nombre en el JavaScript donde dice <code>getElementById('ese-nombre')</code>.</div>
+    </div>
+
+    <!-- QUIZ 4 -->
+    <div class="quiz-card" id="quiz4">
+      <div class="quiz-pregunta">❓ Cambias <code>id="costo"</code> por <code>id="precio"</code> en el HTML pero no cambias nada en el JavaScript. ¿Qué pasa?</div>
+      <div class="quiz-opciones">
+        <button class="quiz-opcion" onclick="responder('quiz4', this, false)">Nada, el JS lo detecta automáticamente</button>
+        <button class="quiz-opcion" onclick="responder('quiz4', this, true)">El JS no encuentra el campo y la app falla</button>
+        <button class="quiz-opcion" onclick="responder('quiz4', this, false)">Solo cambia el color del input</button>
+      </div>
+      <div class="quiz-feedback" id="fb-quiz4"></div>
+    </div>
+
+    <div class="nav-footer">
+      <button class="btn-prev" onclick="irA(3)">← Zona 3</button>
+      <button class="btn-next btn-finalizar" onclick="finalizar()">🎉 ¡Finalizar curso!</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       PANTALLA FINAL
+  ══════════════════════════════════════ -->
+  <section class="zona" id="zona-5">
+    <div class="final-screen">
+      <div class="trofeo">🏆</div>
+      <h2>¡Curso completado!</h2>
+      <p>Ya sabes exactamente qué puedes modificar en la calculadora sin romper nada.</p>
+
+      <ul class="checklist">
+        <li><span class="chk">✓</span> Textos y etiquetas visibles → HTML body</li>
+        <li><span class="chk">✓</span> Colores → Variables <code>:root</code> en CSS</li>
+        <li><span class="chk">✓</span> Símbolo de moneda → 3 lugares con <code>$</code></li>
+        <li><span class="chk">✓</span> Fórmula → 2 líneas en <code>calcular()</code></li>
+        <li><span class="chk">✓</span> No tocar → <code>id=</code>, <code>onclick</code>, <code>parseFloat</code></li>
+      </ul>
+
+      <button class="btn-reiniciar" onclick="reiniciar()">↺ Volver al inicio</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ── Estado del curso ──────────────────────────────────────
+let zonaActual = 0;
+const totalZonas = 4; // zonas 1-4 (sin contar intro ni final)
+const zonasCompletadas = new Set();
+
+// ── Navegación ────────────────────────────────────────────
+function irA(n) {
+  // Ocultar zona actual
+  document.getElementById('zona-' + zonaActual).classList.remove('activa');
+  // Marcar anterior como completada si era una zona real (1-4)
+  if (zonaActual >= 1 && zonaActual <= 4) zonasCompletadas.add(zonaActual);
+
+  zonaActual = n;
+
+  // Mostrar nueva zona
+  document.getElementById('zona-' + n).classList.add('activa');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Actualizar barra de progreso
+  const pct = Math.round((zonasCompletadas.size / totalZonas) * 100);
+  document.getElementById('progreso').style.width = pct + '%';
+  document.getElementById('prog-label').textContent =
+    'Zona ' + Math.min(n, totalZonas) + ' de ' + totalZonas;
+
+  // Actualizar botones del nav
+  const btns = document.querySelectorAll('.nav-btn');
+  const labels = ['Intro','Zona 1 · Textos','Zona 2 · Colores','Zona 3 · Fórmula','Zona 4 · No tocar'];
+  btns.forEach((btn, i) => {
+    btn.classList.remove('activo','completado');
+    if (i === n) btn.classList.add('activo');
+    else if (zonasCompletadas.has(i)) btn.classList.add('completado');
+  });
+}
+
+function finalizar() {
+  zonasCompletadas.add(4);
+  document.getElementById('progreso').style.width = '100%';
+  document.getElementById('prog-label').textContent = '¡Completado! 🎉';
+  document.getElementById('zona-4').classList.remove('activa');
+  document.getElementById('zona-5').classList.add('activa');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Marcar todos como completados en nav
+  document.querySelectorAll('.nav-btn').forEach((btn, i) => {
+    btn.classList.remove('activo');
+    if (i > 0) btn.classList.add('completado');
+  });
+}
+
+function reiniciar() {
+  zonasCompletadas.clear();
+  document.getElementById('zona-5').classList.remove('activa');
+  zonaActual = 0;
+  document.getElementById('zona-0').classList.add('activa');
+  document.getElementById('progreso').style.width = '0%';
+  document.getElementById('prog-label').textContent = 'Zona 0 de 4';
+  document.querySelectorAll('.nav-btn').forEach((btn, i) => {
+    btn.classList.remove('activo','completado');
+    if (i === 0) btn.classList.add('activo');
+  });
+  // Reset quizzes
+  ['quiz1','quiz2','quiz3','quiz4'].forEach(resetQuiz);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Quiz ──────────────────────────────────────────────────
+function responder(quizId, btn, esCorrecta) {
+  const card = document.getElementById(quizId);
+  const fb   = document.getElementById('fb-' + quizId);
+  // Deshabilitar todos los botones de este quiz
+  card.querySelectorAll('.quiz-opcion').forEach(b => b.disabled = true);
+  if (esCorrecta) {
+    btn.classList.add('correcta');
+    fb.className = 'quiz-feedback ok';
+    fb.textContent = '✅ ¡Correcto! Bien hecho.';
+  } else {
+    btn.classList.add('incorrecta');
+    fb.className = 'quiz-feedback err';
+    fb.textContent = '❌ No exactamente. La respuesta correcta está resaltada.';
+    // Resaltar la correcta
+    card.querySelectorAll('.quiz-opcion').forEach(b => {
+      // Re-run to find correct one by calling with true
+    });
+    // Marcar la correcta visualmente
+    card.querySelectorAll('.quiz-opcion').forEach(b => {
+      if (!b.classList.contains('incorrecta')) {
+        // Hack: si tiene el atributo onclick con true, es la correcta
+        if (b.getAttribute('onclick') && b.getAttribute('onclick').includes('true')) {
+          b.classList.add('correcta');
+        }
+      }
+    });
+  }
+}
+
+function resetQuiz(quizId) {
+  const card = document.getElementById(quizId);
+  const fb   = document.getElementById('fb-' + quizId);
+  card.querySelectorAll('.quiz-opcion').forEach(b => {
+    b.disabled = false;
+    b.classList.remove('correcta','incorrecta');
+  });
+  fb.className = 'quiz-feedback';
+  fb.textContent = '';
+}
+
+// ── Copiar código ─────────────────────────────────────────
+function copiar(btn, preId) {
+  const texto = document.getElementById(preId).innerText;
+  navigator.clipboard.writeText(texto).then(() => {
+    btn.textContent = '✓ Copiado';
+    btn.classList.add('copiado');
+    setTimeout(() => {
+      btn.textContent = 'Copiar';
+      btn.classList.remove('copiado');
+    }, 2000);
+  });
+}
+
+// ── Simulador de fórmula ──────────────────────────────────
+function simular() {
+  const costo  = parseFloat(document.getElementById('sim-costo').value) || 0;
+  const margen = parseFloat(document.getElementById('sim-margen').value) || 0;
+  const ganancia    = costo * (margen / 100);
+  const precioVenta = costo + ganancia;
+  document.getElementById('sim-resultado').textContent = '$' + precioVenta.toFixed(2);
+  document.getElementById('sim-ganancia').textContent  = '$' + ganancia.toFixed(2);
+}
+
+// ── Preview de colores ────────────────────────────────────
+function actualizarPreview() {
+  const accent = document.getElementById('pick-accent').value;
+  const green  = document.getElementById('pick-green').value;
+  const bg     = document.getElementById('pick-bg').value;
+  const badge  = document.getElementById('pick-badge').value;
+
+  document.getElementById('prev-header').style.background = accent;
+  document.getElementById('prev-btn').style.background    = green;
+  document.getElementById('prev-btn').style.color         = '#ffffff';
+  document.getElementById('prev-badge').textContent        = badge || 'Tu texto';
+  document.getElementById('prev-badge').style.background  = bg;
+  document.getElementById('prev-badge').style.color       = accent;
+}
+</script>
+
+</body>
+</html>
